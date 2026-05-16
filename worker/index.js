@@ -11,7 +11,7 @@ export default {
       'Access-Control-Allow-Headers': 'Content-Type, X-API-Key',
     };
 
-    // Handle preflight requests
+    // Handle preflight requests FIRST, before auth
     if (method === 'OPTIONS') {
       return new Response(null, {
         status: 204,
@@ -19,8 +19,10 @@ export default {
       });
     }
 
-    // Auth middleware
+    // Auth middleware (now comes after OPTIONS)
     const apiKey = request.headers.get('X-API-Key');
+    console.log('API Key received:', apiKey);
+    console.log('API Secret in env:', env.API_SECRET ? 'SET' : 'NOT SET');
     if (!apiKey || apiKey !== env.API_SECRET) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
