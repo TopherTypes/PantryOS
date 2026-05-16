@@ -114,6 +114,61 @@
               </div>
             </div>
           </div>
+
+          <!-- Inventory Modal -->
+          <div x-show="showInventoryModal" @click.self="closeInventoryModal()" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
+              <div class="flex justify-between items-center mb-4">
+                <h4 class="text-lg font-bold text-gray-900" x-text="'Edit ' + (selectedInventoryItem?.name || '')"></h4>
+                <button @click="closeInventoryModal()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+              </div>
+
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Current Quantity</label>
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="number"
+                      x-model.number="inventoryModalQuantity"
+                      class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      step="0.1"
+                      min="0"
+                    >
+                    <span class="text-gray-600 font-medium" x-text="selectedInventoryItem?.unit || 'unit'"></span>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-3">Quick Actions</label>
+                  <div class="grid grid-cols-3 gap-2">
+                    <button @click="inventoryModalQuantity = 0" class="px-2 py-2 text-xs bg-red-100 text-red-700 hover:bg-red-200 rounded font-medium transition">
+                      Use All
+                    </button>
+                    <button @click="inventoryModalQuantity = (selectedInventoryItem?.quantity || 0) + 1" class="px-2 py-2 text-xs bg-green-100 text-green-700 hover:bg-green-200 rounded font-medium transition">
+                      + 1
+                    </button>
+                    <button @click="inventoryModalQuantity = (selectedInventoryItem?.quantity || 0) - 1" class="px-2 py-2 text-xs bg-orange-100 text-orange-700 hover:bg-orange-200 rounded font-medium transition">
+                      − 1
+                    </button>
+                  </div>
+                </div>
+
+                <div class="text-xs text-gray-600 pt-2" x-show="selectedInventoryItem?.updatedAt">
+                  <span>Last updated: </span>
+                  <span x-text="formatLastUpdated(selectedInventoryItem?.updatedAt)"></span>
+                </div>
+              </div>
+
+              <div class="mt-6 flex gap-2">
+                <button @click="closeInventoryModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition">
+                  Cancel
+                </button>
+                <button @click="updateInventoryAndClose()" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition">
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Page Content (Recipes) -->
@@ -129,9 +184,102 @@
         </div>
 
         <!-- Page Content (Inventory) -->
-        <div x-show="currentPage === 'inventory'">
-          <h2 class="text-3xl font-bold text-gray-900 mb-6">Inventory</h2>
-          <p class="text-gray-600">Inventory management coming in Phase 2</p>
+        <div x-show="currentPage === 'inventory'" x-cloak>
+          <h2 class="text-3xl font-bold text-gray-900 mb-6">📦 Inventory</h2>
+
+          <div x-show="!inventoryReady" class="text-center text-gray-600 py-12">
+            <p>Loading inventory...</p>
+          </div>
+
+          <div x-show="inventoryReady" class="space-y-6">
+            <!-- Controls -->
+            <div class="bg-white rounded-lg shadow-sm p-4 space-y-4">
+              <input
+                type="text"
+                placeholder="Search ingredients..."
+                x-model="inventorySearch"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+
+              <div class="flex gap-2 flex-wrap">
+                <label class="flex items-center gap-2 text-sm">
+                  <input type="radio" x-model="inventorySort" value="name" class="rounded">
+                  <span class="text-gray-700">By Name</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm">
+                  <input type="radio" x-model="inventorySort" value="quantity" class="rounded">
+                  <span class="text-gray-700">By Quantity</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm">
+                  <input type="radio" x-model="inventorySort" value="updated" class="rounded">
+                  <span class="text-gray-700">Recently Updated</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div x-show="filteredInventoryItems.length === 0" class="bg-gray-50 rounded-lg p-12 text-center">
+              <p class="text-gray-600 mb-2">No ingredients in inventory</p>
+              <p class="text-sm text-gray-500">Add some recipes and ingredients to get started</p>
+            </div>
+
+            <!-- Inventory Grid (Mobile) & Table (Desktop) -->
+            <div x-show="filteredInventoryItems.length > 0" class="hidden md:block bg-white rounded-lg shadow overflow-hidden">
+              <table class="w-full border-collapse">
+                <thead>
+                  <tr class="bg-gray-100 border-b border-gray-300">
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Ingredient</th>
+                    <th class="px-4 py-3 text-right text-sm font-semibold text-gray-700">Quantity</th>
+                    <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">Actions</th>
+                    <th class="px-4 py-3 text-right text-sm font-semibold text-gray-700 text-xs">Updated</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="item in filteredInventoryItems" :key="item.ingredientId">
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                      <td class="px-4 py-3 font-medium text-gray-900" x-text="item.name"></td>
+                      <td class="px-4 py-3 text-right">
+                        <span x-text="item.quantity" class="font-semibold text-gray-900"></span>
+                        <span x-text="item.unit" class="text-sm text-gray-600 ml-1"></span>
+                      </td>
+                      <td class="px-4 py-3 text-center">
+                        <button @click="updateInventoryItem(item.ingredientId, Math.max(0, item.quantity - 1))" class="px-2 py-1 text-xs bg-red-100 text-red-700 hover:bg-red-200 rounded font-medium mr-1">−</button>
+                        <button @click="updateInventoryItem(item.ingredientId, item.quantity + 1)" class="px-2 py-1 text-xs bg-green-100 text-green-700 hover:bg-green-200 rounded font-medium mr-1">+</button>
+                        <button @click="openInventoryModal(item)" class="px-2 py-1 text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 rounded font-medium">Edit</button>
+                      </td>
+                      <td class="px-4 py-3 text-right text-xs text-gray-600" x-text="formatLastUpdated(item.updatedAt)"></td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Inventory Grid (Mobile Only) -->
+            <div x-show="filteredInventoryItems.length > 0" class="md:hidden space-y-3">
+              <template x-for="item in filteredInventoryItems" :key="item.ingredientId">
+                <div class="bg-white rounded-lg shadow-sm p-4 border-l-4" :class="item.quantity === 0 ? 'border-gray-400' : 'border-blue-500'">
+                  <div class="flex justify-between items-start mb-3">
+                    <div class="flex-1">
+                      <h3 class="font-semibold text-gray-900" x-text="item.name"></h3>
+                      <p class="text-xs text-gray-600 mt-1" x-text="'Updated ' + formatLastUpdated(item.updatedAt)"></p>
+                    </div>
+                    <button @click="openInventoryModal(item)" class="text-blue-600 hover:text-blue-700 text-lg">✎</button>
+                  </div>
+
+                  <div class="flex items-end justify-between">
+                    <div class="text-3xl font-bold text-gray-900">
+                      <span x-text="item.quantity"></span>
+                      <span x-text="item.unit" class="text-sm text-gray-600 ml-2 font-normal"></span>
+                    </div>
+                    <div class="flex gap-2">
+                      <button @click="updateInventoryItem(item.ingredientId, Math.max(0, item.quantity - 1))" class="px-3 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded font-bold transition">−</button>
+                      <button @click="updateInventoryItem(item.ingredientId, item.quantity + 1)" class="px-3 py-2 bg-green-100 text-green-700 hover:bg-green-200 rounded font-bold transition">+</button>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
         </div>
 
         <!-- Page Content (Shopping) -->
@@ -168,6 +316,7 @@
   <script src="js/api.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/planner.js"></script>
+  <script src="js/inventory.js"></script>
   <script>
     function app() {
       return {
@@ -184,10 +333,21 @@
         recipeSearch: '',
         showRecipePicker: false,
 
+        // Inventory state
+        inventoryReady: false,
+        ingredients: [],
+        inventoryItems: [],
+        inventorySearch: '',
+        inventorySort: 'name',
+        selectedInventoryItem: null,
+        showInventoryModal: false,
+        inventoryModalQuantity: 0,
+
         async init() {
           try {
             await Storage.initDB();
             await this.initPlanner();
+            await this.initInventory();
             this.initialized = true;
           } catch (error) {
             console.error('Failed to initialize:', error);
@@ -272,6 +432,79 @@
 
         get filteredRecipes() {
           return filterRecipes(this.recipes, this.recipeSearch);
+        },
+
+        async initInventory() {
+          try {
+            this.ingredients = await Api.getIngredients();
+            let inventory = await Api.getInventory();
+
+            // Initialize inventory if empty
+            if (inventory.length === 0 && this.ingredients.length > 0) {
+              inventory = await initializeInventory();
+            }
+
+            this.inventoryItems = getInventoryWithDetails(inventory, this.ingredients);
+            this.inventoryReady = true;
+          } catch (error) {
+            console.error('Failed to initialize inventory:', error);
+          }
+        },
+
+        async refreshInventory() {
+          try {
+            const inventory = await Api.getInventory();
+            this.inventoryItems = getInventoryWithDetails(inventory, this.ingredients);
+          } catch (error) {
+            console.error('Failed to refresh inventory:', error);
+          }
+        },
+
+        openInventoryModal(item) {
+          this.selectedInventoryItem = item;
+          this.inventoryModalQuantity = item.quantity;
+          this.showInventoryModal = true;
+        },
+
+        closeInventoryModal() {
+          this.showInventoryModal = false;
+          this.selectedInventoryItem = null;
+          this.inventoryModalQuantity = 0;
+        },
+
+        async updateInventoryItem(ingredientId, quantity) {
+          try {
+            await Api.updateInventory(ingredientId, quantity);
+            await this.refreshInventory();
+          } catch (error) {
+            console.error('Failed to update inventory item:', error);
+          }
+        },
+
+        async updateInventoryAndClose() {
+          try {
+            if (this.selectedInventoryItem) {
+              await Api.updateInventory(this.selectedInventoryItem.ingredientId, this.inventoryModalQuantity);
+              await this.refreshInventory();
+              this.closeInventoryModal();
+            }
+          } catch (error) {
+            console.error('Failed to update inventory:', error);
+          }
+        },
+
+        get filteredInventoryItems() {
+          let items = this.inventoryItems;
+
+          // Filter by search
+          if (this.inventorySearch) {
+            items = filterInventoryBySearch(items, this.inventorySearch);
+          }
+
+          // Sort
+          items = sortInventory(items, this.inventorySort);
+
+          return items;
         },
 
         closePage() {

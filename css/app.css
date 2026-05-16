@@ -71,3 +71,44 @@ textarea:focus {
     display: none;
   }
 }
+
+/* Inventory-specific styles */
+.inventory-item {
+  @apply bg-white rounded-lg shadow-sm p-4 border-l-4 transition-all hover:shadow-md;
+}
+
+.inventory-item.in-stock {
+  @apply border-blue-500;
+}
+
+.inventory-item.out-of-stock {
+  @apply border-gray-400 opacity-75;
+}
+
+.inventory-quantity-display {
+  @apply text-3xl font-bold text-gray-900;
+}
+
+.inventory-unit-label {
+  @apply text-sm text-gray-600 ml-2 font-normal;
+}
+
+.inventory-controls {
+  @apply flex gap-2;
+}
+
+.inventory-btn {
+  @apply px-3 py-2 rounded font-bold transition-colors;
+}
+
+.inventory-btn-decrease {
+  @apply bg-red-100 text-red-700 hover:bg-red-200;
+}
+
+.inventory-btn-increase {
+  @apply bg-green-100 text-green-700 hover:bg-green-200;
+}
+
+.inventory-btn-edit {
+  @apply bg-blue-100 text-blue-700 hover:bg-blue-200;
+}
