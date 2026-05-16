@@ -1,8 +1,15 @@
-// API module — all fetch calls to Cloudflare Worker
-// Set WORKER_URL before using these functions
+// API module — abstracts storage operations
+// Primary: Browser storage (IndexedDB) — always available, no network required
+// Future: Cloudflare Workers for sync/backup/sharing (optional, phase TBD)
 
-let WORKER_URL = localStorage.getItem('worker_url') || 'https://your-worker.workers.dev';
+let SYNC_ENABLED = localStorage.getItem('sync_enabled') === 'true';
+let WORKER_URL = localStorage.getItem('worker_url');
 let API_KEY = localStorage.getItem('api_key');
+
+function setSyncEnabled(enabled) {
+  SYNC_ENABLED = enabled;
+  localStorage.setItem('sync_enabled', enabled ? 'true' : 'false');
+}
 
 function setWorkerUrl(url) {
   WORKER_URL = url;
@@ -22,6 +29,10 @@ function headers() {
 }
 
 async function request(method, path, body = null) {
+  if (!SYNC_ENABLED || !WORKER_URL || !API_KEY) {
+    throw new Error('Cloudflare sync not configured');
+  }
+
   const url = `${WORKER_URL}${path}`;
   const options = {
     method,
@@ -44,111 +55,114 @@ async function request(method, path, body = null) {
 
 // Ingredients
 async function getIngredients() {
-  return request('GET', '/ingredients');
+  return Storage.getIngredients();
 }
 
 async function getIngredient(id) {
-  return request('GET', `/ingredients/${id}`);
+  return Storage.getIngredient(id);
 }
 
 async function createIngredient(data) {
-  return request('POST', '/ingredients', data);
+  return Storage.createIngredient(data);
 }
 
 async function updateIngredient(id, data) {
-  return request('PUT', `/ingredients/${id}`, data);
+  return Storage.updateIngredient(id, data);
 }
 
 async function deleteIngredient(id) {
-  return request('DELETE', `/ingredients/${id}`);
+  return Storage.deleteIngredient(id);
 }
 
 // Recipes
 async function getRecipes() {
-  return request('GET', '/recipes');
+  return Storage.getRecipes();
 }
 
 async function getRecipe(id) {
-  return request('GET', `/recipes/${id}`);
+  return Storage.getRecipe(id);
 }
 
 async function createRecipe(data) {
-  return request('POST', '/recipes', data);
+  return Storage.createRecipe(data);
 }
 
 async function updateRecipe(id, data) {
-  return request('PUT', `/recipes/${id}`, data);
+  return Storage.updateRecipe(id, data);
 }
 
 async function deleteRecipe(id) {
-  return request('DELETE', `/recipes/${id}`);
+  return Storage.deleteRecipe(id);
 }
 
 // Meal Plan
 async function getMealPlan(weekStart) {
-  return request('GET', `/meal-plan?week=${weekStart}`);
+  return Storage.getMealPlan(weekStart);
 }
 
 async function addMealPlanEntry(data) {
-  return request('POST', '/meal-plan', data);
+  return Storage.addMealPlanEntry(data);
 }
 
 async function removeMealPlanEntry(id) {
-  return request('DELETE', `/meal-plan/${id}`);
+  return Storage.removeMealPlanEntry(id);
 }
 
 // Inventory
 async function getInventory() {
-  return request('GET', '/inventory');
+  return Storage.getInventory();
 }
 
 async function updateInventory(ingredientId, quantity) {
-  return request('PUT', `/inventory/${ingredientId}`, { quantity });
+  return Storage.updateInventory(ingredientId, quantity);
 }
 
 async function bulkUpdateInventory(items) {
-  return request('POST', '/inventory/bulk', { items });
+  return Storage.bulkUpdateInventory(items);
 }
 
 // Shopping Lists
 async function getShoppingLists() {
-  return request('GET', '/shopping-lists');
+  return Storage.getShoppingLists();
 }
 
 async function getShoppingList(id) {
-  return request('GET', `/shopping-lists/${id}`);
+  return Storage.getShoppingList(id);
 }
 
-async function generateShoppingList(weekStart) {
-  return request('POST', '/shopping-lists/generate', { week_start: weekStart });
+async function createShoppingList(data) {
+  return Storage.createShoppingList(data);
 }
 
-async function updateShoppingListItem(listId, itemId, data) {
-  return request('PUT', `/shopping-lists/${listId}/items/${itemId}`, data);
+async function updateShoppingList(id, data) {
+  return Storage.updateShoppingList(id, data);
 }
 
-async function completeShoppingList(listId) {
-  return request('PUT', `/shopping-lists/${listId}/complete`, {});
+async function getShoppingListItems(listId) {
+  return Storage.getShoppingListItems(listId);
 }
 
-// Nutrition
-async function getMealPlanNutrition(weekStart) {
-  return request('GET', `/nutrition/meal-plan?week=${weekStart}`);
+async function addShoppingListItem(listId, ingredientId, quantity, unit) {
+  return Storage.addShoppingListItem(listId, ingredientId, quantity, unit);
 }
 
-async function getRecipeNutrition(recipeId) {
-  return request('GET', `/nutrition/recipe/${recipeId}`);
+async function updateShoppingListItem(itemId, data) {
+  return Storage.updateShoppingListItem(itemId, data);
+}
+
+async function removeShoppingListItem(itemId) {
+  return Storage.removeShoppingListItem(itemId);
 }
 
 // Spend
 async function getSpendLog() {
-  return request('GET', '/spend');
+  return Storage.getSpendLog();
 }
 
 async function createSpendEntry(data) {
-  return request('POST', '/spend', data);
+  return Storage.createSpendEntry(data);
 }
 
 async function getSpendSummary() {
-  return request('GET', '/spend/summary');
+  return Storage.getSpendSummary();
 }
