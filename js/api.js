@@ -95,6 +95,18 @@ async function deleteRecipe(id) {
   return Storage.deleteRecipe(id);
 }
 
+async function getRecipeIngredients(recipeId) {
+  return Storage.getRecipeIngredients(recipeId);
+}
+
+async function addRecipeIngredient(recipeId, ingredientId, quantity, unit) {
+  return Storage.addRecipeIngredient(recipeId, ingredientId, quantity, unit);
+}
+
+async function removeRecipeIngredient(id) {
+  return Storage.removeRecipeIngredient(id);
+}
+
 // Meal Plan
 async function getMealPlan(weekStart) {
   return Storage.getMealPlan(weekStart);
