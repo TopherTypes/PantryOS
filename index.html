@@ -23,69 +23,51 @@
         <li><a href="#spend" @click="currentPage = 'spend'" class="text-gray-700 hover:text-gray-900 font-medium">Spend Tracking</a></li>
       </ul>
       <div class="mt-auto pt-6 border-t border-gray-200">
-        <button @click="setupApiKey()" class="text-sm text-gray-600 hover:text-gray-900">Settings</button>
+        <button @click="showSettings = !showSettings" class="text-sm text-gray-600 hover:text-gray-900">⚙️ Settings</button>
       </div>
     </nav>
 
     <!-- Main Content -->
     <main class="flex-1 pb-20 md:pb-0">
       <div class="max-w-6xl mx-auto p-4 md:p-8">
-        <!-- Setup Screen -->
-        <div x-show="!apiKey" class="bg-white rounded-lg shadow p-8 max-w-md mx-auto mt-12">
-          <h2 class="text-2xl font-bold text-gray-900 mb-4">Welcome to PantryOS</h2>
-          <p class="text-gray-600 mb-6">Enter your API secret to begin:</p>
-          <input
-            x-model="apiKeyInput"
-            type="password"
-            placeholder="Paste your API secret"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-          <button
-            @click="setApiKey()"
-            class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-medium"
-          >
-            Save & Continue
-          </button>
-        </div>
-
         <!-- Page Content (Planner) -->
-        <div x-show="apiKey && currentPage === 'planner'">
+        <div x-show="currentPage === 'planner'">
           <h2 class="text-3xl font-bold text-gray-900 mb-6">Meal Planner</h2>
           <p class="text-gray-600">Weekly meal planning coming in Phase 1</p>
         </div>
 
         <!-- Page Content (Recipes) -->
-        <div x-show="apiKey && currentPage === 'recipes'">
+        <div x-show="currentPage === 'recipes'">
           <h2 class="text-3xl font-bold text-gray-900 mb-6">Recipes</h2>
           <p class="text-gray-600">Recipe library coming in Phase 0</p>
         </div>
 
         <!-- Page Content (Ingredients) -->
-        <div x-show="apiKey && currentPage === 'ingredients'">
+        <div x-show="currentPage === 'ingredients'">
           <h2 class="text-3xl font-bold text-gray-900 mb-6">Ingredients</h2>
           <p class="text-gray-600">Ingredient library coming in Phase 0</p>
         </div>
 
         <!-- Page Content (Inventory) -->
-        <div x-show="apiKey && currentPage === 'inventory'">
+        <div x-show="currentPage === 'inventory'">
           <h2 class="text-3xl font-bold text-gray-900 mb-6">Inventory</h2>
           <p class="text-gray-600">Inventory management coming in Phase 2</p>
         </div>
 
         <!-- Page Content (Shopping) -->
-        <div x-show="apiKey && currentPage === 'shopping'">
+        <div x-show="currentPage === 'shopping'">
           <h2 class="text-3xl font-bold text-gray-900 mb-6">Shopping List</h2>
           <p class="text-gray-600">Shopping list generation coming in Phase 3</p>
         </div>
 
         <!-- Page Content (Nutrition) -->
-        <div x-show="apiKey && currentPage === 'nutrition'">
+        <div x-show="currentPage === 'nutrition'">
           <h2 class="text-3xl font-bold text-gray-900 mb-6">Nutrition</h2>
           <p class="text-gray-600">Nutrition dashboard coming in Phase 4</p>
         </div>
 
         <!-- Page Content (Spend) -->
-        <div x-show="apiKey && currentPage === 'spend'">
+        <div x-show="currentPage === 'spend'">
           <h2 class="text-3xl font-bold text-gray-900 mb-6">Spend Tracking</h2>
           <p class="text-gray-600">Spend tracking coming in Phase 5</p>
         </div>
@@ -102,26 +84,22 @@
     </nav>
   </div>
 
+  <script src="js/storage.js"></script>
   <script src="js/api.js"></script>
   <script src="js/utils.js"></script>
   <script>
     function app() {
       return {
-        apiKey: localStorage.getItem('api_key'),
-        apiKeyInput: '',
         currentPage: 'planner',
+        initialized: false,
 
-        setApiKey() {
-          if (this.apiKeyInput.trim()) {
-            localStorage.setItem('api_key', this.apiKeyInput.trim());
-            this.apiKey = this.apiKeyInput;
-            this.apiKeyInput = '';
+        async init() {
+          try {
+            await Storage.initDB();
+            this.initialized = true;
+          } catch (error) {
+            console.error('Failed to initialize storage:', error);
           }
-        },
-
-        setupApiKey() {
-          this.apiKey = null;
-          localStorage.removeItem('api_key');
         },
 
         closePage() {
@@ -129,6 +107,14 @@
         }
       };
     }
+
+    // Initialize storage on page load
+    window.addEventListener('DOMContentLoaded', async () => {
+      const appEl = document.querySelector('[x-data="app()"]');
+      if (appEl && appEl.__x) {
+        await appEl.__x.init();
+      }
+    });
   </script>
 </body>
 </html>
