@@ -1,5 +1,9 @@
 /* PantryOS Custom Styles */
 
+[x-cloak] {
+  display: none;
+}
+
 :root {
   --color-primary: #2563eb;
   --color-success: #10b981;
