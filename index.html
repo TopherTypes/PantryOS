@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PantryOS — Meal Planner</title>
-  <script defer src="https://cdn.tailwindcss.com"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="css/tailwind.css">
   <link rel="stylesheet" href="css/app.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
 </head>
 <body class="bg-gray-50" x-data="app()" @keydown.document.escape="closePage()">
   <div class="min-h-screen flex flex-col md:flex-row">
@@ -299,7 +299,7 @@
                 </div>
 
                 <div x-show="editingRecipe?.ingredients?.length > 0" class="space-y-2">
-                  <template x-for="(ing, idx) in editingRecipe.ingredients" :key="idx">
+                  <template x-for="(ing, idx) in editingRecipe?.ingredients || []" :key="idx">
                     <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
                       <div class="flex-1">
                         <span class="font-medium text-gray-900" x-text="ing.ingredientName"></span>

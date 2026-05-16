@@ -126,3 +126,42 @@ async function createSpendEntry(data) {
 async function getSpendSummary() {
   return Storage.getSpendSummary();
 }
+
+const Api = {
+  // Ingredients
+  getIngredients,
+  getIngredient,
+  createIngredient,
+  updateIngredient,
+  deleteIngredient,
+  // Recipes
+  getRecipes,
+  getRecipe,
+  createRecipe,
+  updateRecipe,
+  deleteRecipe,
+  getRecipeIngredients,
+  addRecipeIngredient,
+  removeRecipeIngredient,
+  // Meal Plan
+  getMealPlan,
+  addMealPlanEntry,
+  removeMealPlanEntry,
+  // Inventory
+  getInventory,
+  updateInventory,
+  bulkUpdateInventory,
+  // Shopping Lists
+  getShoppingLists,
+  getShoppingList,
+  createShoppingList,
+  updateShoppingList,
+  getShoppingListItems,
+  addShoppingListItem,
+  updateShoppingListItem,
+  removeShoppingListItem,
+  // Spend
+  getSpendLog,
+  createSpendEntry,
+  getSpendSummary
+};
