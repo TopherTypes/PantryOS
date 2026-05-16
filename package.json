@@ -4,10 +4,14 @@
   "description": "Meal planner with inventory and spend tracking",
   "main": "worker/index.js",
   "scripts": {
+    "build:css": "node build-css.js",
     "dev": "wrangler dev",
     "deploy": "wrangler deploy --env production"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.0",
+    "postcss": "^8.5.14",
+    "tailwindcss": "^4.3.0",
     "wrangler": "^3.0.0"
   }
 }
