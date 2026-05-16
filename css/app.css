@@ -30,19 +30,19 @@ textarea:focus {
 }
 
 .btn-base {
-  @apply px-4 py-2 rounded-lg font-medium transition-colors;
+  @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200;
 }
 
 .btn-primary {
-  @apply btn-base bg-blue-600 text-white hover:bg-blue-700;
+  @apply btn-base bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 shadow-md hover:shadow-lg;
 }
 
 .btn-secondary {
-  @apply btn-base bg-gray-200 text-gray-900 hover:bg-gray-300;
+  @apply btn-base bg-gray-200 text-gray-900 hover:bg-gray-300 active:bg-gray-400;
 }
 
 .btn-danger {
-  @apply btn-base bg-red-600 text-white hover:bg-red-700;
+  @apply btn-base bg-red-600 text-white hover:bg-red-700 active:bg-red-800 shadow-md hover:shadow-lg;
 }
 
 .btn-sm {
@@ -50,7 +50,7 @@ textarea:focus {
 }
 
 .card {
-  @apply bg-white rounded-lg shadow p-6;
+  @apply bg-white rounded-lg shadow-md p-6 border border-gray-100;
 }
 
 .grid-responsive {
@@ -72,72 +72,176 @@ textarea:focus {
   }
 }
 
+/* Navigation tab styling */
+nav a,
+nav button {
+  position: relative;
+  font-weight: 500;
+  padding-bottom: 2px;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+nav a:hover,
+nav button:hover {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+/* Table styling enhancements */
+table {
+  background-color: white;
+}
+
+table thead {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  border-bottom: 3px solid var(--color-primary);
+}
+
+table th {
+  font-weight: 700;
+  color: #1f2937;
+  padding: 1rem;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+table td {
+  border-color: #e5e7eb;
+  padding: 0.75rem;
+}
+
+/* Button styling in table cells */
+table button {
+  font-weight: 500;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+table button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+table button.empty-slot {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+}
+
+table button.empty-slot:hover {
+  background-color: var(--color-primary);
+  color: white;
+}
+
 /* Inventory-specific styles */
 .inventory-item {
-  @apply bg-white rounded-lg shadow-sm p-4 border-l-4 transition-all hover:shadow-md;
+  @apply bg-white rounded-lg shadow-md p-4 border-l-4 transition-all hover:shadow-lg hover:-translate-y-1 border-gray-200;
 }
 
 .inventory-item.in-stock {
-  @apply border-blue-500;
+  @apply border-l-4 border-green-500 bg-gradient-to-r from-white to-green-50;
 }
 
 .inventory-item.out-of-stock {
-  @apply border-gray-400 opacity-75;
+  @apply border-l-4 border-gray-300 opacity-75 bg-gray-50;
 }
 
 .inventory-quantity-display {
-  @apply text-3xl font-bold text-gray-900;
+  @apply text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent;
 }
 
 .inventory-unit-label {
-  @apply text-sm text-gray-600 ml-2 font-normal;
+  @apply text-sm text-gray-600 ml-2 font-semibold;
 }
 
 .inventory-controls {
-  @apply flex gap-2;
+  @apply flex gap-2 mt-4;
 }
 
 .inventory-btn {
-  @apply px-3 py-2 rounded font-bold transition-colors;
+  @apply px-3 py-2 rounded font-bold transition-all duration-200 transform;
+}
+
+.inventory-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .inventory-btn-decrease {
-  @apply bg-red-100 text-red-700 hover:bg-red-200;
+  @apply bg-red-100 text-red-700 hover:bg-red-600 hover:text-white border border-red-300;
 }
 
 .inventory-btn-increase {
-  @apply bg-green-100 text-green-700 hover:bg-green-200;
+  @apply bg-green-100 text-green-700 hover:bg-green-600 hover:text-white border border-green-300;
 }
 
 .inventory-btn-edit {
-  @apply bg-blue-100 text-blue-700 hover:bg-blue-200;
+  @apply bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-300;
 }
 
 /* Recipe-specific styles */
 .recipe-card {
-  @apply bg-white rounded-lg shadow-sm p-4 md:p-6 border-l-4 border-blue-500 transition-all hover:shadow-md;
+  @apply bg-white rounded-lg shadow-md p-4 md:p-6 border-l-4 border-blue-500 transition-all hover:shadow-xl hover:-translate-y-1 border-l-4 border-gradient;
+}
+
+.recipe-card:hover {
+  border-left-color: var(--color-primary);
 }
 
 .recipe-info {
-  @apply flex flex-wrap gap-4 mt-2 text-sm text-gray-600;
+  @apply flex flex-wrap gap-4 mt-3 text-sm text-gray-600;
 }
 
 .recipe-actions {
-  @apply flex gap-2 flex-wrap md:flex-nowrap;
+  @apply flex gap-2 flex-wrap md:flex-nowrap mt-4;
 }
 
 .recipe-btn {
-  @apply px-3 py-2 text-xs rounded font-medium transition-colors;
+  @apply px-3 py-2 text-xs rounded-md font-semibold transition-all duration-200 transform;
+}
+
+.recipe-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
 }
 
 .recipe-btn-ingredients {
-  @apply bg-purple-100 text-purple-700 hover:bg-purple-200;
+  @apply bg-purple-100 text-purple-700 hover:bg-purple-600 hover:text-white border border-purple-300;
 }
 
 .recipe-btn-edit {
-  @apply bg-blue-100 text-blue-700 hover:bg-blue-200;
+  @apply bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-300;
 }
 
 .recipe-btn-delete {
-  @apply bg-red-100 text-red-700 hover:bg-red-200;
+  @apply bg-red-100 text-red-700 hover:bg-red-600 hover:text-white border border-red-300;
+}
+
+/* Modal styling */
+.modal-overlay {
+  backdrop-filter: blur(2px);
+}
+
+/* Improved section headers */
+h2 {
+  @apply font-bold text-gray-900 mb-6;
+}
+
+h3 {
+  @apply font-semibold text-gray-800;
+}
+
+/* Input focus enhancement */
+input:focus,
+select:focus,
+textarea:focus {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
