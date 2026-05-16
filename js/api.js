@@ -1,57 +1,5 @@
-// API module — abstracts storage operations
-// Primary: Browser storage (IndexedDB) — always available, no network required
-// Future: Cloudflare Workers for sync/backup/sharing (optional, phase TBD)
-
-let SYNC_ENABLED = localStorage.getItem('sync_enabled') === 'true';
-let WORKER_URL = localStorage.getItem('worker_url');
-let API_KEY = localStorage.getItem('api_key');
-
-function setSyncEnabled(enabled) {
-  SYNC_ENABLED = enabled;
-  localStorage.setItem('sync_enabled', enabled ? 'true' : 'false');
-}
-
-function setWorkerUrl(url) {
-  WORKER_URL = url;
-  localStorage.setItem('worker_url', url);
-}
-
-function setApiKey(key) {
-  API_KEY = key;
-  localStorage.setItem('api_key', key);
-}
-
-function headers() {
-  return {
-    'Content-Type': 'application/json',
-    'X-API-Key': API_KEY
-  };
-}
-
-async function request(method, path, body = null) {
-  if (!SYNC_ENABLED || !WORKER_URL || !API_KEY) {
-    throw new Error('Cloudflare sync not configured');
-  }
-
-  const url = `${WORKER_URL}${path}`;
-  const options = {
-    method,
-    headers: headers()
-  };
-
-  if (body) {
-    options.body = JSON.stringify(body);
-  }
-
-  const response = await fetch(url, options);
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || `HTTP ${response.status}`);
-  }
-
-  return data;
-}
+// API module — browser-based storage only
+// All data is stored locally in IndexedDB on the device
 
 // Ingredients
 async function getIngredients() {
