@@ -1,0 +1,13 @@
+{
+  "name": "pantryos",
+  "version": "0.1.0",
+  "description": "Meal planner with inventory and spend tracking",
+  "main": "worker/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --env production"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
