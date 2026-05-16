@@ -31,9 +31,89 @@
     <main class="flex-1 pb-20 md:pb-0">
       <div class="max-w-6xl mx-auto p-4 md:p-8">
         <!-- Page Content (Planner) -->
-        <div x-show="currentPage === 'planner'">
-          <h2 class="text-3xl font-bold text-gray-900 mb-6">Meal Planner</h2>
-          <p class="text-gray-600">Weekly meal planning coming in Phase 1</p>
+        <div x-show="currentPage === 'planner'" x-cloak>
+          <div class="flex items-center justify-between mb-8">
+            <h2 class="text-3xl font-bold text-gray-900">Meal Planner</h2>
+          </div>
+
+          <div class="flex items-center justify-between mb-6 bg-white p-4 rounded-lg shadow-sm">
+            <button @click="previousWeek()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded transition">← Previous Week</button>
+            <h3 class="text-lg font-semibold text-gray-800" x-text="formatWeekRange(currentWeek)"></h3>
+            <button @click="nextWeek()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded transition">Next Week →</button>
+          </div>
+
+          <div x-show="mealPlannerReady" class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full border-collapse">
+                <thead>
+                  <tr class="bg-gray-100 border-b-2 border-gray-300">
+                    <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700 w-20">Meal</th>
+                    <template x-for="(weekDate, idx) in weekDates" :key="idx">
+                      <th class="px-4 py-3 text-center border-l border-gray-200">
+                        <div class="text-sm font-semibold text-gray-900" x-text="weekDate.day"></div>
+                        <div class="text-xs text-gray-600" x-text="formatDate(weekDate.date)"></div>
+                      </th>
+                    </template>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="(mealType, mealIdx) in ['Breakfast', 'Lunch', 'Dinner', 'Snacks']" :key="mealIdx">
+                    <tr :class="mealIdx < 3 ? 'border-b border-gray-200' : ''">
+                      <td class="px-4 py-3 bg-gray-50 text-sm font-semibold text-gray-700 border-r border-gray-200" x-text="mealType"></td>
+                      <template x-for="(dayGrid, dayIdx) in mealGrid" :key="dayIdx">
+                        <td class="px-4 py-3 border-l border-gray-200 text-center">
+                          <button
+                            @click="openRecipePicker(dayIdx, mealIdx)"
+                            :class="dayGrid[mealIdx] ? 'bg-blue-50 text-blue-900 font-medium' : 'bg-gray-50 text-gray-500'"
+                            class="w-full px-3 py-2 rounded text-sm hover:bg-gray-100 transition"
+                          >
+                            <template x-if="dayGrid[mealIdx]">
+                              <span x-text="dayGrid[mealIdx].recipeName || 'Assigned'"></span>
+                            </template>
+                            <template x-if="!dayGrid[mealIdx]">
+                              <span>+ Add</span>
+                            </template>
+                          </button>
+                        </td>
+                      </template>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Recipe Picker Modal -->
+          <div x-show="showRecipePicker" @click.self="closeRecipePicker()" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
+              <div class="flex justify-between items-center mb-4">
+                <h4 class="text-lg font-bold text-gray-900">Select Recipe</h4>
+                <button @click="closeRecipePicker()" class="text-gray-400 hover:text-gray-600">✕</button>
+              </div>
+
+              <input
+                type="text"
+                placeholder="Search recipes..."
+                x-model="recipeSearch"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+
+              <div class="max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
+                <template x-for="recipe in filteredRecipes" :key="recipe.id">
+                  <button
+                    @click="selectRecipe(recipe)"
+                    class="w-full px-4 py-3 text-left hover:bg-blue-50 border-b border-gray-100 transition"
+                  >
+                    <div class="font-medium text-gray-900" x-text="recipe.name"></div>
+                    <div class="text-xs text-gray-600 mt-1" x-text="'Servings: ' + (recipe.servings || 1)"></div>
+                  </button>
+                </template>
+                <div x-show="filteredRecipes.length === 0" class="px-4 py-6 text-center text-gray-500">
+                  No recipes found
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Page Content (Recipes) -->
@@ -87,19 +167,111 @@
   <script src="js/storage.js"></script>
   <script src="js/api.js"></script>
   <script src="js/utils.js"></script>
+  <script src="js/planner.js"></script>
   <script>
     function app() {
       return {
         currentPage: 'planner',
         initialized: false,
 
+        // Meal planner state
+        mealPlannerReady: false,
+        currentWeek: getMonday(),
+        weekDates: [],
+        recipes: [],
+        mealGrid: [],
+        selectedSlot: null,
+        recipeSearch: '',
+        showRecipePicker: false,
+
         async init() {
           try {
             await Storage.initDB();
+            await this.initPlanner();
             this.initialized = true;
           } catch (error) {
-            console.error('Failed to initialize storage:', error);
+            console.error('Failed to initialize:', error);
           }
+        },
+
+        async initPlanner() {
+          try {
+            const { recipes, currentWeek, entries } = await initMealPlanner();
+            this.recipes = recipes;
+            this.currentWeek = currentWeek;
+            this.weekDates = getWeekDates(this.currentWeek);
+            this.mealGrid = await organizeMealPlan(entries, this.weekDates, recipes);
+            this.mealPlannerReady = true;
+          } catch (error) {
+            console.error('Failed to initialize planner:', error);
+          }
+        },
+
+        previousWeek() {
+          const prev = new Date(this.currentWeek + 'T00:00:00Z');
+          prev.setDate(prev.getDate() - 7);
+          this.currentWeek = prev.toISOString().split('T')[0];
+          this.refreshMealPlan();
+        },
+
+        nextWeek() {
+          const next = new Date(this.currentWeek + 'T00:00:00Z');
+          next.setDate(next.getDate() + 7);
+          this.currentWeek = next.toISOString().split('T')[0];
+          this.refreshMealPlan();
+        },
+
+        async refreshMealPlan() {
+          try {
+            this.weekDates = getWeekDates(this.currentWeek);
+            const entries = await getMealPlan(this.currentWeek);
+            this.mealGrid = await organizeMealPlan(entries, this.weekDates, this.recipes);
+          } catch (error) {
+            console.error('Failed to refresh meal plan:', error);
+          }
+        },
+
+        openRecipePicker(dayIndex, mealIndex) {
+          this.selectedSlot = { dayIndex, mealIndex };
+          this.showRecipePicker = true;
+          this.recipeSearch = '';
+        },
+
+        closeRecipePicker() {
+          this.showRecipePicker = false;
+          this.selectedSlot = null;
+          this.recipeSearch = '';
+        },
+
+        async selectRecipe(recipe) {
+          try {
+            const { dayIndex, mealIndex } = this.selectedSlot;
+            const meals = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
+            const date = this.weekDates[dayIndex].date;
+
+            // Remove existing entry if present
+            const existing = this.mealGrid[dayIndex][mealIndex];
+            if (existing) {
+              await removeMealPlanEntry(existing.id);
+            }
+
+            // Add new entry
+            await addMealPlanEntry({
+              weekStart: this.currentWeek,
+              date,
+              mealType: meals[mealIndex],
+              recipeId: recipe.id
+            });
+
+            this.closeRecipePicker();
+            await this.refreshMealPlan();
+          } catch (error) {
+            console.error('Failed to select recipe:', error);
+          }
+        },
+
+        get filteredRecipes() {
+          return filterRecipes(this.recipes, this.recipeSearch);
         },
 
         closePage() {
