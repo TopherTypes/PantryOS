@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PantryOS — Meal Planner</title>
+  <script defer src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body class="bg-gray-50" x-data="app()" @keydown.document.escape="closePage()">
+  <div class="min-h-screen flex flex-col md:flex-row">
+    <!-- Desktop Sidebar Navigation -->
+    <nav class="hidden md:flex md:w-64 bg-white border-r border-gray-200 flex-col p-6">
+      <h1 class="text-2xl font-bold text-gray-900 mb-8">PantryOS</h1>
+      <ul class="space-y-4">
+        <li><a href="#planner" @click="currentPage = 'planner'" class="text-gray-700 hover:text-gray-900 font-medium">Meal Planner</a></li>
+        <li><a href="#recipes" @click="currentPage = 'recipes'" class="text-gray-700 hover:text-gray-900 font-medium">Recipes</a></li>
+        <li><a href="#ingredients" @click="currentPage = 'ingredients'" class="text-gray-700 hover:text-gray-900 font-medium">Ingredients</a></li>
+        <li><a href="#inventory" @click="currentPage = 'inventory'" class="text-gray-700 hover:text-gray-900 font-medium">Inventory</a></li>
+        <li><a href="#shopping" @click="currentPage = 'shopping'" class="text-gray-700 hover:text-gray-900 font-medium">Shopping List</a></li>
+        <li><a href="#nutrition" @click="currentPage = 'nutrition'" class="text-gray-700 hover:text-gray-900 font-medium">Nutrition</a></li>
+        <li><a href="#spend" @click="currentPage = 'spend'" class="text-gray-700 hover:text-gray-900 font-medium">Spend Tracking</a></li>
+      </ul>
+      <div class="mt-auto pt-6 border-t border-gray-200">
+        <button @click="setupApiKey()" class="text-sm text-gray-600 hover:text-gray-900">Settings</button>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 pb-20 md:pb-0">
+      <div class="max-w-6xl mx-auto p-4 md:p-8">
+        <!-- Setup Screen -->
+        <div x-show="!apiKey" class="bg-white rounded-lg shadow p-8 max-w-md mx-auto mt-12">
+          <h2 class="text-2xl font-bold text-gray-900 mb-4">Welcome to PantryOS</h2>
+          <p class="text-gray-600 mb-6">Enter your API secret to begin:</p>
+          <input
+            x-model="apiKeyInput"
+            type="password"
+            placeholder="Paste your API secret"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+          <button
+            @click="setApiKey()"
+            class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-medium"
+          >
+            Save & Continue
+          </button>
+        </div>
+
+        <!-- Page Content (Planner) -->
+        <div x-show="apiKey && currentPage === 'planner'">
+          <h2 class="text-3xl font-bold text-gray-900 mb-6">Meal Planner</h2>
+          <p class="text-gray-600">Weekly meal planning coming in Phase 1</p>
+        </div>
+
+        <!-- Page Content (Recipes) -->
+        <div x-show="apiKey && currentPage === 'recipes'">
+          <h2 class="text-3xl font-bold text-gray-900 mb-6">Recipes</h2>
+          <p class="text-gray-600">Recipe library coming in Phase 0</p>
+        </div>
+
+        <!-- Page Content (Ingredients) -->
+        <div x-show="apiKey && currentPage === 'ingredients'">
+          <h2 class="text-3xl font-bold text-gray-900 mb-6">Ingredients</h2>
+          <p class="text-gray-600">Ingredient library coming in Phase 0</p>
+        </div>
+
+        <!-- Page Content (Inventory) -->
+        <div x-show="apiKey && currentPage === 'inventory'">
+          <h2 class="text-3xl font-bold text-gray-900 mb-6">Inventory</h2>
+          <p class="text-gray-600">Inventory management coming in Phase 2</p>
+        </div>
+
+        <!-- Page Content (Shopping) -->
+        <div x-show="apiKey && currentPage === 'shopping'">
+          <h2 class="text-3xl font-bold text-gray-900 mb-6">Shopping List</h2>
+          <p class="text-gray-600">Shopping list generation coming in Phase 3</p>
+        </div>
+
+        <!-- Page Content (Nutrition) -->
+        <div x-show="apiKey && currentPage === 'nutrition'">
+          <h2 class="text-3xl font-bold text-gray-900 mb-6">Nutrition</h2>
+          <p class="text-gray-600">Nutrition dashboard coming in Phase 4</p>
+        </div>
+
+        <!-- Page Content (Spend) -->
+        <div x-show="apiKey && currentPage === 'spend'">
+          <h2 class="text-3xl font-bold text-gray-900 mb-6">Spend Tracking</h2>
+          <p class="text-gray-600">Spend tracking coming in Phase 5</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Mobile Tab Navigation -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around">
+      <button @click="currentPage = 'planner'" class="flex-1 py-4 text-center text-xs font-medium" :class="currentPage === 'planner' ? 'text-blue-600' : 'text-gray-600'">📅 Plan</button>
+      <button @click="currentPage = 'recipes'" class="flex-1 py-4 text-center text-xs font-medium" :class="currentPage === 'recipes' ? 'text-blue-600' : 'text-gray-600'">📖 Recipes</button>
+      <button @click="currentPage = 'inventory'" class="flex-1 py-4 text-center text-xs font-medium" :class="currentPage === 'inventory' ? 'text-blue-600' : 'text-gray-600'">📦 Stock</button>
+      <button @click="currentPage = 'shopping'" class="flex-1 py-4 text-center text-xs font-medium" :class="currentPage === 'shopping' ? 'text-blue-600' : 'text-gray-600'">🛒 Shop</button>
+      <button @click="currentPage = 'spend'" class="flex-1 py-4 text-center text-xs font-medium" :class="currentPage === 'spend' ? 'text-blue-600' : 'text-gray-600'">💰 Track</button>
+    </nav>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    function app() {
+      return {
+        apiKey: localStorage.getItem('api_key'),
+        apiKeyInput: '',
+        currentPage: 'planner',
+
+        setApiKey() {
+          if (this.apiKeyInput.trim()) {
+            localStorage.setItem('api_key', this.apiKeyInput.trim());
+            this.apiKey = this.apiKeyInput;
+            this.apiKeyInput = '';
+          }
+        },
+
+        setupApiKey() {
+          this.apiKey = null;
+          localStorage.removeItem('api_key');
+        },
+
+        closePage() {
+          // Placeholder for closing overlays
+        }
+      };
+    }
+  </script>
+</body>
+</html>

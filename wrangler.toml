@@ -1,0 +1,11 @@
+name = "pantryos-worker"
+main = "worker/index.js"
+compatibility_date = "2024-01-01"
+
+[env.production]
+vars = { API_SECRET = "your-api-secret-here" }
+
+[[d1_databases]]
+binding = "DB"
+database_name = "pantryos"
+database_id = "your-database-id-here"
