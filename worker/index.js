@@ -103,7 +103,80 @@ async function handleIngredients(request, env, path, method, corsHeaders) {
 }
 
 async function handleRecipes(request, env, path, method, corsHeaders) {
-  return jsonResponse({ error: 'Not Implemented' }, 501, corsHeaders);
+  const { DB } = env;
+  const segments = path.split('/').filter(Boolean);
+  const recipeId = segments[1];
+  const ingredientId = segments[3];
+
+  if (method === 'GET') {
+    if (recipeId && segments[2] === 'ingredients') {
+      // GET /recipes/:id/ingredients
+      const ingredients = await DB.prepare(`
+        SELECT ri.id, ri.recipe_id, ri.ingredient_id, ri.quantity, ri.notes,
+               i.name, i.unit, i.calories, i.protein, i.carbs, i.fat
+        FROM recipe_ingredients ri
+        JOIN ingredients i ON ri.ingredient_id = i.id
+        WHERE ri.recipe_id = ?
+        ORDER BY i.name
+      `).bind(recipeId).all();
+      return jsonResponse(ingredients.results || [], 200, corsHeaders);
+    } else if (recipeId) {
+      // GET /recipes/:id
+      const recipe = await DB.prepare('SELECT * FROM recipes WHERE id = ?').bind(recipeId).first();
+      return jsonResponse(recipe || { error: 'Not Found' }, recipe ? 200 : 404, corsHeaders);
+    } else {
+      // GET /recipes
+      const recipes = await DB.prepare('SELECT * FROM recipes ORDER BY name').all();
+      return jsonResponse(recipes.results || [], 200, corsHeaders);
+    }
+  } else if (method === 'POST') {
+    if (recipeId && segments[2] === 'ingredients') {
+      // POST /recipes/:id/ingredients
+      const body = await request.json();
+      const { ingredient_id, quantity, notes } = body;
+      if (!ingredient_id || quantity === undefined) {
+        return jsonResponse({ error: 'Missing required fields' }, 400, corsHeaders);
+      }
+      const result = await DB.prepare(
+        'INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, notes) VALUES (?, ?, ?, ?)'
+      ).bind(recipeId, ingredient_id, quantity, notes || null).run();
+      return jsonResponse({ id: result.meta.last_row_id, recipe_id: recipeId, ingredient_id, quantity }, 201, corsHeaders);
+    } else {
+      // POST /recipes
+      const body = await request.json();
+      const { name, description, servings, prep_mins, cook_mins } = body;
+      if (!name) {
+        return jsonResponse({ error: 'Missing required fields' }, 400, corsHeaders);
+      }
+      const result = await DB.prepare(
+        'INSERT INTO recipes (name, description, servings, prep_mins, cook_mins) VALUES (?, ?, ?, ?, ?)'
+      ).bind(name, description || null, servings || 1, prep_mins || 0, cook_mins || 0).run();
+      return jsonResponse({ id: result.meta.last_row_id, name }, 201, corsHeaders);
+    }
+  } else if (method === 'PUT') {
+    if (recipeId) {
+      // PUT /recipes/:id
+      const body = await request.json();
+      const { name, description, servings, prep_mins, cook_mins } = body;
+      await DB.prepare(
+        'UPDATE recipes SET name = ?, description = ?, servings = ?, prep_mins = ?, cook_mins = ? WHERE id = ?'
+      ).bind(name, description, servings, prep_mins, cook_mins, recipeId).run();
+      return jsonResponse({ success: true }, 200, corsHeaders);
+    }
+  } else if (method === 'DELETE') {
+    if (recipeId && segments[2] === 'ingredients' && ingredientId) {
+      // DELETE /recipes/:id/ingredients/:ingredient_id
+      await DB.prepare('DELETE FROM recipe_ingredients WHERE recipe_id = ? AND ingredient_id = ?')
+        .bind(recipeId, ingredientId).run();
+      return jsonResponse({ success: true }, 200, corsHeaders);
+    } else if (recipeId) {
+      // DELETE /recipes/:id - cascade to recipe_ingredients handled by schema ON DELETE CASCADE
+      await DB.prepare('DELETE FROM recipes WHERE id = ?').bind(recipeId).run();
+      return jsonResponse({ success: true }, 200, corsHeaders);
+    }
+  }
+
+  return jsonResponse({ error: 'Method Not Allowed' }, 405, corsHeaders);
 }
 
 async function handleMealPlan(request, env, path, method, corsHeaders) {
